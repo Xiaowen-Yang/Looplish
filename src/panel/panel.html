@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Looplish</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand">
+        <div class="brand__mark" aria-hidden="true">L</div>
+        <div>
+          <h1>Looplish</h1>
+          <p>Listen. Type. Notice.</p>
+        </div>
+      </header>
+
+      <section id="loading-state" class="state-card" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <h2>正在准备精听练习</h2>
+        <p>正在读取 YouTube 已有字幕…</p>
+      </section>
+
+      <section id="error-state" class="state-card" hidden>
+        <div class="state-icon" aria-hidden="true">↗</div>
+        <h2>打开一个 YouTube 视频</h2>
+        <p id="error-message">Looplish 会优先使用视频已有的英文字幕。</p>
+        <button id="retry-button" class="button button--primary" type="button">重试</button>
+      </section>
+
+      <section id="practice-state" hidden>
+        <div class="video-card">
+          <p class="eyebrow">NOW PRACTICING</p>
+          <h2 id="video-title"></h2>
+          <p id="video-meta" class="muted"></p>
+        </div>
+
+        <div class="progress-row">
+          <span id="position"></span>
+          <progress id="progress" value="1" max="1"></progress>
+        </div>
+
+        <div class="player-card">
+          <div class="transport" aria-label="播放控制">
+            <button id="previous-button" class="icon-button" type="button" title="上一句（Alt + ←）">←</button>
+            <button id="replay-button" class="replay-button" type="button" title="重听本句（Alt + 空格）">
+              <span aria-hidden="true">↻</span>
+              <span>重听本句</span>
+            </button>
+            <button id="toggle-button" class="icon-button" type="button" title="播放或暂停">Ⅱ</button>
+            <button id="next-button" class="icon-button" type="button" title="下一句（Alt + →）">→</button>
+          </div>
+          <label class="rate-control">
+            语速
+            <select id="rate-select">
+              <option value="0.75">0.75×</option>
+              <option value="0.85">0.85×</option>
+              <option value="1">1.0×</option>
+              <option value="1.25">1.25×</option>
+              <option value="1.5">1.5×</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="answer-card">
+          <label for="answer-input">你听到了什么？</label>
+          <textarea id="answer-input" rows="5" spellcheck="false" autocomplete="off"></textarea>
+          <div class="answer-actions">
+            <span class="shortcut">Ctrl/⌘ + Enter</span>
+            <button id="check-button" class="button button--primary" type="button">检查答案</button>
+          </div>
+        </div>
+
+        <section id="result" class="result-card" aria-live="polite" hidden>
+          <div class="result-header">
+            <p class="eyebrow">对照结果</p>
+            <strong id="score"></strong>
+          </div>
+          <div id="diff" class="diff" aria-label="逐词差异"></div>
+          <div class="reference-block">
+            <span>字幕原文</span>
+            <p id="reference"></p>
+          </div>
+        </section>
+
+        <footer>
+          <span class="privacy-dot" aria-hidden="true"></span>
+          <span id="local-status">学习记录仅保存在这台设备上。</span>
+        </footer>
+      </section>
+    </main>
+    <script src="panel.js"></script>
+  </body>
+</html>
+
