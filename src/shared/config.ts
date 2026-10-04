@@ -14,7 +14,10 @@ export const APP_CONFIG = {
   },
   youtube: {
     hostname: "www.youtube.com",
-    watchPath: "/watch"
+    watchPath: "/watch",
+    playerSelector: "video.html5-main-video",
+    navigationEvent: "yt-navigate-finish"
   }
 } as const;
+
 
