@@ -12,6 +12,7 @@ import {
 } from "../infrastructure/youtube/playerResponse";
 import {
   asJson3CaptionUrl,
+  findPreferredTokenizedCaption,
   findTokenizedCaptionUrl,
   getCaptionResourceUrls
 } from "../infrastructure/youtube/playerCaptionRequest";
@@ -64,15 +65,18 @@ async function fetchTimedText(url: string): Promise<YouTubeTimedText | undefined
   return value as YouTubeTimedText;
 }
 
-async function waitForTokenizedCaptionUrl(
-  track: NonNullable<ReturnType<typeof selectPreferredCaptionTrack>>
-): Promise<string | undefined> {
+async function waitForTokenizedCaption(
+  videoId: string
+): Promise<ReturnType<typeof findPreferredTokenizedCaption>> {
   const deadline = Date.now() + APP_CONFIG.youtube.captionRequestWaitMs;
 
   do {
-    const url = findTokenizedCaptionUrl(getCaptionResourceUrls(), track);
-    if (url) {
-      return url;
+    const candidate = findPreferredTokenizedCaption(
+      getCaptionResourceUrls(),
+      videoId
+    );
+    if (candidate) {
+      return candidate;
     }
     await new Promise((resolve) => {
       window.setTimeout(resolve, APP_CONFIG.youtube.captionRequestPollMs);
@@ -83,9 +87,32 @@ async function waitForTokenizedCaptionUrl(
 }
 
 async function loadPreferredCaption(): Promise<NonNullable<BridgeResponseMessage["payload"]>> {
+  const videoId = new URL(window.location.href).searchParams.get("v");
+  if (!videoId) {
+    throw new Error("当前页面不是可识别的 YouTube 视频。");
+  }
+
+  const playerCaption = findPreferredTokenizedCaption(
+    getCaptionResourceUrls(),
+    videoId
+  );
+  if (playerCaption) {
+    const timedText = await fetchTimedText(asJson3CaptionUrl(playerCaption.url));
+    if (timedText) {
+      return { caption: playerCaption.track, timedText };
+    }
+  }
+
   const track = selectPreferredCaptionTrack(getCaptionTracks(readPlayerResponse()));
   if (!track) {
-    throw new Error("No subtitles are available for this video.");
+    const delayedCaption = await waitForTokenizedCaption(videoId);
+    if (delayedCaption) {
+      const timedText = await fetchTimedText(asJson3CaptionUrl(delayedCaption.url));
+      if (timedText) {
+        return { caption: delayedCaption.track, timedText };
+      }
+    }
+    throw new Error("没有捕获到字幕数据。请开启 CC、播放几秒，然后重试。");
   }
 
   const playerUrl = findTokenizedCaptionUrl(getCaptionResourceUrls(), track);
@@ -101,11 +128,11 @@ async function loadPreferredCaption(): Promise<NonNullable<BridgeResponseMessage
     return { caption: track, timedText: directTimedText };
   }
 
-  const tokenizedUrl = await waitForTokenizedCaptionUrl(track);
-  if (tokenizedUrl) {
-    const tokenizedTimedText = await fetchTimedText(asJson3CaptionUrl(tokenizedUrl));
+  const tokenizedCaption = await waitForTokenizedCaption(videoId);
+  if (tokenizedCaption) {
+    const tokenizedTimedText = await fetchTimedText(asJson3CaptionUrl(tokenizedCaption.url));
     if (tokenizedTimedText) {
-      return { caption: track, timedText: tokenizedTimedText };
+      return { caption: tokenizedCaption.track, timedText: tokenizedTimedText };
     }
   }
 
